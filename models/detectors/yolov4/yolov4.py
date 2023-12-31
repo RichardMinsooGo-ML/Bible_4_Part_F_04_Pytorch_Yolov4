@@ -1,8 +1,11 @@
+# --------------- Torch components ---------------
 import torch
 import torch.nn as nn
 
+# --------------- External components ---------------
 from utils.misc import multiclass_nms
 
+# --------------- Model components ---------------
 from .yolov4_backbone import build_backbone
 from .yolov4_neck import build_neck
 from .yolov4_pafpn import build_fpn
@@ -14,13 +17,13 @@ class YOLOv4(nn.Module):
     def __init__(self,
                  cfg,
                  device,
-                 num_classes=20,
-                 conf_thresh=0.01,
-                 nms_thresh=0.5,
-                 topk=100,
-                 trainable=False,
-                 deploy=False,
-                 nms_class_agnostic=False):
+                 num_classes = 20,
+                 conf_thresh = 0.01,
+                 nms_thresh  = 0.5,
+                 topk        = 100,
+                 trainable   = False,
+                 deploy      = False,
+                 nms_class_agnostic = False):
         super(YOLOv4, self).__init__()
         # ------------------------- Basic parameters  ---------------------------
         self.cfg                = cfg                  # Model configuration file
@@ -34,7 +37,7 @@ class YOLOv4(nn.Module):
         self.deploy             = deploy
         self.nms_class_agnostic = nms_class_agnostic
         # ------------------- Anchor box -------------------
-        self.num_levels = 3
+        self.num_levels  = 3
         self.num_anchors = len(cfg['anchor_size']) // self.num_levels
         self.anchor_size = torch.as_tensor(
             cfg['anchor_size']
@@ -48,7 +51,7 @@ class YOLOv4(nn.Module):
         ## Neck network: SPP module
         self.neck = build_neck(cfg, in_dim=feats_dim[-1], out_dim=feats_dim[-1])
         feats_dim[-1] = self.neck.out_dim
-
+        
         ## Neck Network: Feature Pyramid
         self.fpn = build_fpn(cfg=cfg, in_dims=feats_dim, out_dim=int(256*cfg['width']))
         self.head_dim = self.fpn.out_dim
@@ -122,11 +125,11 @@ class YOLOv4(nn.Module):
             # torch.sort is actually faster than .topk (at least on GPUs)
             predicted_prob, topk_idxs = scores_i.sort(descending=True)
             topk_scores = predicted_prob[:num_topk]
-            topk_idxs = topk_idxs[:num_topk]
+            topk_idxs   = topk_idxs[:num_topk]
 
             # filter out the proposals with low confidence score
             keep_idxs = topk_scores > self.conf_thresh
-            scores = topk_scores[keep_idxs]
+            scores    = topk_scores[keep_idxs]
             topk_idxs = topk_idxs[keep_idxs]
 
             anchor_idxs = torch.div(topk_idxs, self.num_classes, rounding_mode='floor')
@@ -167,7 +170,7 @@ class YOLOv4(nn.Module):
         pyramid_feats = self.fpn(pyramid_feats)
 
         # Detection head
-        all_anchors = []
+        all_anchors   = []
         all_obj_preds = []
         all_cls_preds = []
         all_box_preds = []
@@ -181,7 +184,7 @@ class YOLOv4(nn.Module):
 
             # anchors: [M, 2]
             fmp_size = cls_pred.shape[-2:]
-            anchors = self.generate_anchors(level, fmp_size)
+            anchors  = self.generate_anchors(level, fmp_size)
 
             # [1, AC, H, W] -> [H, W, AC] -> [M, C]
             obj_pred = obj_pred[0].permute(1, 2, 0).contiguous().view(-1, 1)
@@ -189,11 +192,11 @@ class YOLOv4(nn.Module):
             reg_pred = reg_pred[0].permute(1, 2, 0).contiguous().view(-1, 4)
 
             # decode bbox
-            ctr_pred = (torch.sigmoid(reg_pred[..., :2]) * 3.0 - 1.5 + anchors[..., :2]) * self.stride[level]
-            wh_pred = torch.exp(reg_pred[..., 2:]) * anchors[..., 2:]
+            ctr_pred  = (torch.sigmoid(reg_pred[..., :2]) * 3.0 - 1.5 + anchors[..., :2]) * self.stride[level]
+            wh_pred   = torch.exp(reg_pred[..., 2:]) * anchors[..., 2:]
             pred_x1y1 = ctr_pred - wh_pred * 0.5
             pred_x2y2 = ctr_pred + wh_pred * 0.5
-            box_pred = torch.cat([pred_x1y1, pred_x2y2], dim=-1)
+            box_pred  = torch.cat([pred_x1y1, pred_x2y2], dim=-1)
 
             all_obj_preds.append(obj_pred)
             all_cls_preds.append(cls_pred)
@@ -204,8 +207,8 @@ class YOLOv4(nn.Module):
             obj_preds = torch.cat(all_obj_preds, dim=0)
             cls_preds = torch.cat(all_cls_preds, dim=0)
             box_preds = torch.cat(all_box_preds, dim=0)
-            scores = torch.sqrt(obj_preds.sigmoid() * cls_preds.sigmoid())
-            bboxes = box_preds
+            scores    = torch.sqrt(obj_preds.sigmoid() * cls_preds.sigmoid())
+            bboxes    = box_preds
             # [n_anchors_all, 4 + C]
             outputs = torch.cat([bboxes, scores], dim=-1)
 
@@ -229,7 +232,7 @@ class YOLOv4(nn.Module):
 
             # Neck network
             pyramid_feats[-1] = self.neck(pyramid_feats[-1])
-
+            
             # Feature pyramid
             pyramid_feats = self.fpn(pyramid_feats)
 
@@ -257,8 +260,8 @@ class YOLOv4(nn.Module):
                 reg_pred = reg_pred.permute(0, 2, 3, 1).contiguous().view(bs, -1, 4)
 
                 # Decode bbox
-                ctr_pred = (torch.sigmoid(reg_pred[..., :2]) * 3.0 - 1.5 + anchors[..., :2]) * self.stride[level]
-                wh_pred = torch.exp(reg_pred[..., 2:]) * anchors[..., 2:]
+                ctr_pred  = (torch.sigmoid(reg_pred[..., :2]) * 3.0 - 1.5 + anchors[..., :2]) * self.stride[level]
+                wh_pred   = torch.exp(reg_pred[..., 2:]) * anchors[..., 2:]
                 pred_x1y1 = ctr_pred - wh_pred * 0.5
                 pred_x2y2 = ctr_pred + wh_pred * 0.5
                 box_pred = torch.cat([pred_x1y1, pred_x2y2], dim=-1)
@@ -267,12 +270,12 @@ class YOLOv4(nn.Module):
                 all_cls_preds.append(cls_pred)
                 all_box_preds.append(box_pred)
                 all_fmp_sizes.append(fmp_size)
-
+            
             # Network output
             outputs = {"pred_obj": all_obj_preds,        # List [B, M, 1]
                        "pred_cls": all_cls_preds,        # List [B, M, C]
                        "pred_box": all_box_preds,        # List [B, M, 4]
                        'fmp_sizes': all_fmp_sizes,       # List
-                       'strides': self.stride,           # List
+                       "strides": self.stride,           # List
                        }
             return outputs
