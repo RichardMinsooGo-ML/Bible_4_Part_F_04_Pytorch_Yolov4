@@ -22,16 +22,16 @@ class YOLOv4(nn.Module):
                  deploy=False,
                  nms_class_agnostic=False):
         super(YOLOv4, self).__init__()
-        # ------------------- Basic parameters -------------------
-        self.cfg = cfg                                 # 模型配置文件
-        self.device = device                           # cuda或者是cpu
-        self.num_classes = num_classes                 # 类别的数量
-        self.trainable = trainable                     # 训练的标记
-        self.conf_thresh = conf_thresh                 # 得分阈值
-        self.nms_thresh = nms_thresh                   # NMS阈值
-        self.topk = topk                               # topk
-        self.stride = [8, 16, 32]                      # 网络的输出步长
-        self.deploy = deploy
+        # ------------------------- Basic parameters  ---------------------------
+        self.cfg                = cfg                  # Model configuration file
+        self.device             = device               # cuda or cpu
+        self.num_classes        = num_classes          # number of classes
+        self.trainable          = trainable            # training mark
+        self.conf_thresh        = conf_thresh          # score threshold
+        self.nms_thresh         = nms_thresh           # NMS threshold
+        self.topk               = topk                 # topk
+        self.stride             = [8, 16, 32]          # The output step size of the network
+        self.deploy             = deploy
         self.nms_class_agnostic = nms_class_agnostic
         # ------------------- Anchor box -------------------
         self.num_levels = 3
@@ -40,26 +40,26 @@ class YOLOv4(nn.Module):
             cfg['anchor_size']
             ).float().view(self.num_levels, self.num_anchors, 2) # [S, A, 2]
         
-        # ------------------- Network Structure -------------------
-        ## 主干网络
+        # ----------------------- Model network structure -----------------------
+        ## Backbone network
         self.backbone, feats_dim = build_backbone(
             cfg['backbone'], trainable&cfg['pretrained'])
 
-        ## 颈部网络: SPP模块
+        ## Neck network: SPP module
         self.neck = build_neck(cfg, in_dim=feats_dim[-1], out_dim=feats_dim[-1])
         feats_dim[-1] = self.neck.out_dim
 
-        ## 颈部网络: 特征金字塔
+        ## Neck Network: Feature Pyramid
         self.fpn = build_fpn(cfg=cfg, in_dims=feats_dim, out_dim=int(256*cfg['width']))
         self.head_dim = self.fpn.out_dim
 
-        ## 检测头
+        ## Detection head
         self.non_shared_heads = nn.ModuleList(
             [build_head(cfg, head_dim, head_dim, num_classes) 
             for head_dim in self.head_dim
             ])
 
-        ## 预测层
+        ## Prediction layer
         self.obj_preds = nn.ModuleList(
                             [nn.Conv2d(head.reg_out_dim, 1 * self.num_anchors, kernel_size=1) 
                                 for head in self.non_shared_heads
@@ -157,16 +157,16 @@ class YOLOv4(nn.Module):
     # ---------------------- Main Process for Inference ----------------------
     @torch.no_grad()
     def inference(self, x):
-        # 主干网络
+        # Backbone network
         pyramid_feats = self.backbone(x)
 
-        # 颈部网络
+        # Neck network
         pyramid_feats[-1] = self.neck(pyramid_feats[-1])
 
-        # 特征金字塔
+        # Feature pyramid
         pyramid_feats = self.fpn(pyramid_feats)
 
-        # 检测头
+        # Detection head
         all_anchors = []
         all_obj_preds = []
         all_cls_preds = []
@@ -211,10 +211,10 @@ class YOLOv4(nn.Module):
 
             return outputs
         else:
-            # post process
+            # Post-processing
             bboxes, scores, labels = self.post_process(
                 all_obj_preds, all_cls_preds, all_box_preds)
-        
+            
             return bboxes, scores, labels
 
 
@@ -224,16 +224,16 @@ class YOLOv4(nn.Module):
             return self.inference(x)
         else:
             bs = x.shape[0]
-            # 主干网络
+            # Backbone network
             pyramid_feats = self.backbone(x)
 
-            # 颈部网络
+            # Neck network
             pyramid_feats[-1] = self.neck(pyramid_feats[-1])
 
-            # 特征金字塔
+            # Feature pyramid
             pyramid_feats = self.fpn(pyramid_feats)
 
-            # 检测头
+            # Detection head
             all_fmp_sizes = []
             all_obj_preds = []
             all_cls_preds = []
@@ -256,7 +256,7 @@ class YOLOv4(nn.Module):
                 cls_pred = cls_pred.permute(0, 2, 3, 1).contiguous().view(bs, -1, self.num_classes)
                 reg_pred = reg_pred.permute(0, 2, 3, 1).contiguous().view(bs, -1, 4)
 
-                # decode bbox
+                # Decode bbox
                 ctr_pred = (torch.sigmoid(reg_pred[..., :2]) * 3.0 - 1.5 + anchors[..., :2]) * self.stride[level]
                 wh_pred = torch.exp(reg_pred[..., 2:]) * anchors[..., 2:]
                 pred_x1y1 = ctr_pred - wh_pred * 0.5
@@ -268,12 +268,11 @@ class YOLOv4(nn.Module):
                 all_box_preds.append(box_pred)
                 all_fmp_sizes.append(fmp_size)
 
-            # output dict
+            # Network output
             outputs = {"pred_obj": all_obj_preds,        # List [B, M, 1]
                        "pred_cls": all_cls_preds,        # List [B, M, C]
                        "pred_box": all_box_preds,        # List [B, M, 4]
                        'fmp_sizes': all_fmp_sizes,       # List
                        'strides': self.stride,           # List
                        }
-
-            return outputs 
+            return outputs
