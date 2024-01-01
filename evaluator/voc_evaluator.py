@@ -91,7 +91,7 @@ class VOCAPIEvaluator():
                                                                     copy=False)
                 self.all_boxes[j][i] = c_dets
 
-            if i % 500 == 0:
+            if (i+1) % 500 == 0 or (i+1) == num_images:
                 print('im_detect: {:d}/{:d} {:.3f}s'.format(i + 1, num_images, detect_time))
 
         with open(det_file, 'wb') as f:
