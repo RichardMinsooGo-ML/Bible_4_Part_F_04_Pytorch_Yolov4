@@ -22,44 +22,28 @@ from models.detectors import build_model
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO-Tutorial')
     # basic
-    parser.add_argument('-size', '--img_size', default=640, type=int,
-                        help='the max size of input image')
-    parser.add_argument('--cuda', action='store_true', default=False,
-                        help='Use cuda')
+    parser.add_argument('-size', '--img_size', default=640, type=int, help='the max size of input image')
+    parser.add_argument('--cuda', action='store_true', default=False, help='Use cuda')
 
     # model
-    parser.add_argument('-m', '--model', default='yolov1', type=str,
-                        help='build yolo')
-    parser.add_argument('--weight', default=None,
-                        type=str, help='Trained state_dict file path to open')
-    parser.add_argument('-ct', '--conf_thresh', default=0.001, type=float,
-                        help='confidence threshold')
-    parser.add_argument('-nt', '--nms_thresh', default=0.7, type=float,
-                        help='NMS threshold')
-    parser.add_argument('--topk', default=1000, type=int,
-                        help='topk candidates dets of each level before NMS')
-    parser.add_argument("--no_decode", action="store_true", default=False,
-                        help="not decode in inference or yes")
-    parser.add_argument('--fuse_conv_bn', action='store_true', default=False,
-                        help='fuse Conv & BN')
-    parser.add_argument('--nms_class_agnostic', action='store_true', default=False,
-                        help='Perform NMS operations regardless of category.')
+    parser.add_argument('-m', '--model', default='yolov1', type=str, help='build yolo')
+    parser.add_argument('--weight', default=None, type=str, help='Trained state_dict file path to open')
+    parser.add_argument('-ct', '--conf_thresh', default=0.001, type=float, help='confidence threshold')
+    parser.add_argument('-nt', '--nms_thresh', default=0.7, type=float, help='NMS threshold')
+    parser.add_argument('--topk', default=1000, type=int, help='topk candidates dets of each level before NMS')
+    parser.add_argument("--no_decode", action="store_true", default=False, help="not decode in inference or yes")
+    parser.add_argument('--fuse_conv_bn', action='store_true', default=False, help='fuse Conv & BN')
+    parser.add_argument('--nms_class_agnostic', action='store_true', default=False, help='Perform NMS operations regardless of category.')
 
     # dataset
-    parser.add_argument('--root', default='/mnt/share/ssd2/dataset',
-                        help='data root')
-    parser.add_argument('-d', '--dataset', default='coco',
-                        help='coco, voc.')
-    parser.add_argument('--mosaic', default=None, type=float,
-                        help='mosaic augmentation.')
-    parser.add_argument('--mixup', default=None, type=float,
-                        help='mixup augmentation.')
-    parser.add_argument('--load_cache', action='store_true', default=False,
-                        help='load data into memory.')
+    parser.add_argument('--data_path', default='/mnt/share/ssd2/dataset', help='data path')
+    parser.add_argument('-d', '--dataset', default='coco', help='coco, voc.')
+    parser.add_argument('--mosaic', default=None, type=float, help='mosaic augmentation.')
+    parser.add_argument('--mixup', default=None, type=float, help='mixup augmentation.')
+    parser.add_argument('--load_cache', action='store_true', default=False, help='load data into memory.')
 
     # TTA
-    parser.add_argument('-tta', '--test_aug', action='store_true', default=False,
-                        help='use test augmentation.')
+    parser.add_argument('-tta', '--test_aug', action='store_true', default=False, help='use test augmentation.')
 
     return parser.parse_args()
 
@@ -122,7 +106,7 @@ if __name__ == '__main__':
     model_cfg = build_model_config(args)
     trans_cfg = build_trans_config(model_cfg['trans_type'])
     
-    data_dir = os.path.join(args.root, data_cfg['data_name'])
+    data_dir = os.path.join(args.data_path, data_cfg['data_name'])
     num_classes = data_cfg['num_classes']
 
     # build model

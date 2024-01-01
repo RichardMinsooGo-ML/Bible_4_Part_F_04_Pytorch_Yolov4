@@ -21,54 +21,32 @@ def parse_args():
     parser = argparse.ArgumentParser(description='YOLO-Tutorial')
 
     # basic
-    parser.add_argument('-size', '--img_size', default=640, type=int,
-                        help='the max size of input image')
-    parser.add_argument('--show', action='store_true', default=False,
-                        help='show the visulization results.')
-    parser.add_argument('--save', action='store_true', default=False,
-                        help='save the visulization results.')
-    parser.add_argument('--cuda', action='store_true', default=False, 
-                        help='use cuda.')
-    parser.add_argument('--save_folder', default='det_results/', type=str,
-                        help='Dir to save results')
-    parser.add_argument('-vt', '--visual_threshold', default=0.3, type=float,
-                        help='Final confidence threshold')
-    parser.add_argument('-ws', '--window_scale', default=1.0, type=float,
-                        help='resize window of cv2 for visualization.')
-    parser.add_argument('--resave', action='store_true', default=False, 
-                        help='resave checkpoints without optimizer state dict.')
+    parser.add_argument('-size', '--img_size', default=640, type=int, help='the max size of input image')
+    parser.add_argument('--show', action='store_true', default=False, help='show the visulization results.')
+    parser.add_argument('--save', action='store_true', default=False, help='save the visulization results.')
+    parser.add_argument('--cuda', action='store_true', default=False, help='use cuda.')
+    parser.add_argument('--save_folder', default='det_results/', type=str, help='Dir to save results')
+    parser.add_argument('-vt', '--visual_threshold', default=0.3, type=float, help='Final confidence threshold')
+    parser.add_argument('-ws', '--window_scale', default=1.0, type=float, help='resize window of cv2 for visualization.')
+    parser.add_argument('--resave', action='store_true', default=False, help='resave checkpoints without optimizer state dict.')
 
     # model
-    parser.add_argument('-m', '--model', default='yolov1', type=str,
-                        help='build yolo')
-    parser.add_argument('--weight', default=None,
-                        type=str, help='Trained state_dict file path to open')
-    parser.add_argument('-ct', '--conf_thresh', default=0.25, type=float,
-                        help='confidence threshold')
-    parser.add_argument('-nt', '--nms_thresh', default=0.5, type=float,
-                        help='NMS threshold')
-    parser.add_argument('--topk', default=100, type=int,
-                        help='topk candidates dets of each level before NMS')
-    parser.add_argument("--no_decode", action="store_true", default=False,
-                        help="not decode in inference or yes")
-    parser.add_argument('--fuse_conv_bn', action='store_true', default=False,
-                        help='fuse Conv & BN')
-    parser.add_argument('--nms_class_agnostic', action='store_true', default=False,
-                        help='Perform NMS operations regardless of category.')
+    parser.add_argument('-m', '--model', default='yolov1', type=str, help='build yolo')
+    parser.add_argument('--weight', default=None, type=str, help='Trained state_dict file path to open')
+    parser.add_argument('-ct', '--conf_thresh', default=0.25, type=float, help='confidence threshold')
+    parser.add_argument('-nt', '--nms_thresh', default=0.5, type=float, help='NMS threshold')
+    parser.add_argument('--topk', default=100, type=int, help='topk candidates dets of each level before NMS')
+    parser.add_argument("--no_decode", action="store_true", default=False, help="not decode in inference or yes")
+    parser.add_argument('--fuse_conv_bn', action='store_true', default=False, help='fuse Conv & BN')
+    parser.add_argument('--nms_class_agnostic', action='store_true', default=False, help='Perform NMS operations regardless of category.')
 
     # dataset
-    parser.add_argument('--root', default='/mnt/share/ssd2/dataset',
-                        help='data root')
-    parser.add_argument('-d', '--dataset', default='coco',
-                        help='coco, voc.')
-    parser.add_argument('--min_box_size', default=8.0, type=float,
-                        help='min size of target bounding box.')
-    parser.add_argument('--mosaic', default=None, type=float,
-                        help='mosaic augmentation.')
-    parser.add_argument('--mixup', default=None, type=float,
-                        help='mixup augmentation.')
-    parser.add_argument('--load_cache', action='store_true', default=False,
-                        help='load data into memory.')
+    parser.add_argument('--data_path', default='/mnt/share/ssd2/dataset', help='data path')
+    parser.add_argument('-d', '--dataset', default='coco', help='coco, voc.')
+    parser.add_argument('--min_box_size', default=8.0, type=float, help='min size of target bounding box.')
+    parser.add_argument('--mosaic', default=None, type=float, help='mosaic augmentation.')
+    parser.add_argument('--mixup', default=None, type=float, help='mixup augmentation.')
+    parser.add_argument('--load_cache', action='store_true', default=False, help='load data into memory.')
 
     return parser.parse_args()
 
