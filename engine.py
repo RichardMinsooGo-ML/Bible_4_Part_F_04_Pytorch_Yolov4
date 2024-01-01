@@ -36,7 +36,6 @@ class RTCTrainer(object):
         self.grad_accumulate    = args.grad_accumulate
         self.no_aug_epoch       = args.no_aug_epoch
         self.clip_grad          = 35
-        self.heavy_eval         = False
         # weak augmentatino stage
         self.second_stage       = False
         self.third_stage        = False
@@ -128,13 +127,9 @@ class RTCTrainer(object):
             self.train_one_epoch(model, self.epoch)
 
             # eval one epoch
-            if self.heavy_eval:
-                model_eval = model.module if self.args.distributed else model
+            model_eval = model.module if self.args.distributed else model
+            if (epoch+1 % self.args.eval_epoch) == 0 or (epoch == self.args.max_epoch - 1):
                 self.eval(model_eval)
-            else:
-                model_eval = model.module if self.args.distributed else model
-                if (epoch+1 % self.args.eval_epoch) == 0 or (epoch == self.args.max_epoch - 1):
-                    self.eval(model_eval)
 
             if self.args.debug:
                 print("For debug mode, we only train 1 epoch")
@@ -303,14 +298,12 @@ class RTCTrainer(object):
         if self.train_loader.dataset.mosaic_prob > 0.:
             print(' - Close < Mosaic Augmentation > ...')
             self.train_loader.dataset.mosaic_prob = 0.
-            self.heavy_eval = True
-
+        
         # close mixup augmentation
         if self.train_loader.dataset.mixup_prob > 0.:
             print(' - Close < Mixup Augmentation > ...')
             self.train_loader.dataset.mixup_prob = 0.
-            self.heavy_eval = True
-
+        
         # close rotation augmentation
         if 'degrees' in self.trans_cfg.keys() and self.trans_cfg['degrees'] > 0.0:
             print(' - Close < degress of rotation > ...')
