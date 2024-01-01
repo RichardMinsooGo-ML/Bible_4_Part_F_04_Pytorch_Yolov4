@@ -2,11 +2,13 @@ import os
 
 try:
     from .voc import VOCDataset
+    from .coco import COCODataset
     from .data_augment.ssd_augment import SSDAugmentation, SSDBaseTransform
     from .data_augment.yolov5_augment import YOLOv5Augmentation, YOLOv5BaseTransform
 
 except:
     from voc import VOCDataset
+    from coco import COCODataset
     from data_augment.ssd_augment import SSDAugmentation, SSDBaseTransform
     from data_augment.yolov5_augment import YOLOv5Augmentation, YOLOv5BaseTransform
 
@@ -14,7 +16,7 @@ except:
 # ------------------------------ Dataset ------------------------------
 def build_dataset(args, data_cfg, trans_config, transform, is_train=False):
     # ------------------------- Basic parameters -------------------------
-    data_dir = os.path.join(args.data_path, data_cfg['data_name'])
+    data_dir = os.path.join(args.root, data_cfg['data_name'])
     num_classes = data_cfg['num_classes']
     class_names = data_cfg['class_names']
     class_indexs = data_cfg['class_indexs']
@@ -36,6 +38,18 @@ def build_dataset(args, data_cfg, trans_config, transform, is_train=False):
                              is_train     = is_train,
                              load_cache   = args.load_cache
                              )
+    ## COCO dataset
+    elif args.dataset == 'coco':
+        image_set = 'train2017' if is_train else 'val2017'
+        dataset = COCODataset(img_size     = args.img_size,
+                              data_dir     = data_dir,
+                              image_set    = image_set,
+                              transform    = transform,
+                              trans_config = trans_config,
+                              is_train     = is_train,
+                              load_cache   = args.load_cache
+                              )
+
     return dataset, dataset_info
 
 
