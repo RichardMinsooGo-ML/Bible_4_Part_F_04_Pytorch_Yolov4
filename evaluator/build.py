@@ -2,14 +2,10 @@ import os
 
 from evaluator.coco_evaluator import COCOAPIEvaluator
 from evaluator.voc_evaluator import VOCAPIEvaluator
-from evaluator.crowdhuman_evaluator import CrowdHumanEvaluator
-from evaluator.ourdataset_evaluator import OurDatasetEvaluator
-
-
 
 def build_evluator(args, data_cfg, transform, device):
     # Basic parameters
-    data_dir = os.path.join(args.root, data_cfg['data_name'])
+    data_dir = os.path.join(args.data_path, data_cfg['data_name'])
 
     # Evaluator
     ## VOC Evaluator
