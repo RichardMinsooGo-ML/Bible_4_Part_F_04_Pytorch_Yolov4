@@ -16,7 +16,7 @@ except:
 # ------------------------------ Dataset ------------------------------
 def build_dataset(args, data_cfg, trans_config, transform, is_train=False):
     # ------------------------- Basic parameters -------------------------
-    data_dir = os.path.join(args.root, data_cfg['data_name'])
+    data_dir = os.path.join(args.data_path, data_cfg['data_name'])
     num_classes = data_cfg['num_classes']
     class_names = data_cfg['class_names']
     class_indexs = data_cfg['class_indexs']
